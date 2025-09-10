@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Результаты поиска - Receipt Scanner{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🔍 Результаты поиска: "{{ query }}"</h2>
+    
+    <form action="/search" method="GET" style="margin-bottom: 1rem;">
+        <input type="text" name="q" class="search-box" 
+               placeholder="Введите поисковый запрос..."
+               value="{{ query }}"
+               autofocus>
+        <button type="submit" class="btn">Найти</button>
+    </form>
+    
+    {% if documents %}
+        <p><strong>Найдено документов: {{ documents|length }}</strong></p>
+        
+        {% for doc in documents %}
+        <div class="document-item">
+            <div class="document-title">
+                {% if doc.document_type == 'email_content' %}
+                    📧 {{ doc.subject[:60] }}{% if doc.subject|length > 60 %}...{% endif %}
+                {% else %}
+                    📁 {{ doc.filename }}
+                {% endif %}
+            </div>
+            <div class="document-meta">
+                📧 <strong>От:</strong> {{ doc.sender }}<br>
+                📅 <strong>Дата:</strong> {{ doc.email_date }}<br>
+                🏷️ <strong>Тема:</strong> {{ doc.subject }}<br>
+                📑 <strong>Тип:</strong> {{ 'Содержимое письма' if doc.document_type == 'email_content' else 'Вложение' }}<br>
+                🌐 <strong>Язык:</strong> {{ doc.language }}<br>
+                🔢 <strong>Оценка:</strong> {{ doc.financial_score }}/100<br>
+                {% if doc.gmail_url %}
+                    🔗 <strong>Gmail:</strong> <a href="{{ doc.gmail_url }}" target="_blank" style="color: #3498db;">Открыть письмо</a>
+                {% endif %}
+            </div>
+            
+            {% if doc.amounts_found %}
+            <div class="document-amounts">
+                💰 <strong>Найденные суммы:</strong> {{ doc.amounts_found|join(', ') }}
+            </div>
+            {% endif %}
+            
+            {% if doc.keywords_found %}
+            <div class="document-keywords">
+                🔤 <strong>Ключевые слова:</strong> {{ doc.keywords_found|join(', ') }}
+            </div>
+            {% endif %}
+            
+            {% if doc.text_content %}
+            <details style="margin-top: 0.5rem;">
+                <summary style="cursor: pointer; color: #3498db;">📝 Показать текст документа</summary>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem; max-height: 200px; overflow-y: auto;">
+                    {{ doc.text_content }}
+                </div>
+            </details>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 2rem;">
+            <p>📭 По запросу "{{ query }}" документы не найдены</p>
+            <p>Попробуйте:</p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>Использовать другие ключевые слова</li>
+                <li>Проверить правильность написания</li>
+                <li>Искать по части слова</li>
+                <li>Использовать более общие термины</li>
+            </ul>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <p><a href="/search" class="btn">← Новый поиск</a> <a href="/documents" class="btn">Все документы</a></p>
+</div>
+{% endblock %}

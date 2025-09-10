@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Сканирование Gmail - Receipt Scanner{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🔍 Сканирование Gmail</h2>
+    
+    {% if status.is_scanning %}
+        <div class="scanning-status">
+            <h3>⏳ Сканирование выполняется...</h3>
+            <div class="progress-info">
+                <p><strong>Статус:</strong> <span id="progress-text">{{ status.progress }}</span></p>
+                <p><strong>Обработано писем:</strong> <span id="emails-processed">{{ status.emails_processed }}</span></p>
+                <p><strong>Найдено документов:</strong> <span id="documents-found">{{ status.documents_found }}</span></p>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <div style="background: #f0f0f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div class="progress-bar" style="background: #3498db; height: 100%; width: 50%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                Пожалуйста, не закрывайте эту страницу во время сканирования.
+            </p>
+        </div>
+    {% else %}
+        <div class="scan-form">
+            <p>Запустите сканирование Gmail для поиска новых финансовых документов.</p>
+            
+            <form action="/start_scan" method="POST" style="margin-top: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label for="days" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                        Глубина сканирования:
+                    </label>
+                    <select name="days" id="days" style="width: 200px; padding: 0.8rem; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                        <option value="1">Последний 1 день</option>
+                        <option value="3">Последние 3 дня</option>
+                        <option value="7">Последняя неделя</option>
+                        <option value="14">Последние 2 недели</option>
+                        <option value="30" selected>Последний месяц</option>
+                        <option value="60">Последние 2 месяца</option>
+                        <option value="90">Последние 3 месяца</option>
+                        <option value="180">Последние 6 месяцев</option>
+                        <option value="365">Последний год</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" style="background: #27ae60; font-size: 1.1rem; padding: 1rem 2rem;">
+                    🚀 Запустить сканирование
+                </button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>📊 Что происходит при сканировании?</h3>
+    <ol>
+        <li><strong>Поиск писем</strong> - система ищет все письма с вложениями за выбранный период</li>
+        <li><strong>Анализ вложений</strong> - проверка PDF, изображений и других файлов на финансовое содержимое</li>
+        <li><strong>Анализ текста писем</strong> - поиск финансовых терминов и ссылок в тексте самих писем</li>
+        <li><strong>OCR обработка</strong> - извлечение текста из изображений на русском, английском и других языках</li>
+        <li><strong>Сохранение результатов</strong> - все найденные документы сохраняются в базу данных</li>
+    </ol>
+    
+    <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 5px; font-size: 0.9rem;">
+        <strong>💡 Совет:</strong> Для первого запуска рекомендуется выбрать небольшой период (1-7 дней) 
+        чтобы протестировать систему, а затем запустить полное сканирование за больший период.
+    </div>
+</div>
+
+{% if not status.is_scanning %}
+<script>
+// Automatically refresh page when scanning starts
+document.querySelector('form').addEventListener('submit', function() {
+    setTimeout(function() {
+        window.location.reload();
+    }, 2000);
+});
+</script>
+{% else %}
+<script>
+// Auto-update scanning status
+function updateStatus() {
+    fetch('/api/scan_status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('progress-text').textContent = data.progress;
+            document.getElementById('emails-processed').textContent = data.emails_processed;
+            document.getElementById('documents-found').textContent = data.documents_found;
+            
+            if (!data.is_scanning) {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 3000);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Update every 3 seconds
+setInterval(updateStatus, 3000);
+</script>
+{% endif %}
+{% endblock %}
