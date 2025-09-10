@@ -32,6 +32,7 @@ venv.bak/
 # Credentials and sensitive data
 config/credentials.json
 config/token.pickle
+config/config.json
 
 # Database
 data/documents.db

@@ -86,6 +86,17 @@ class GmailClient:
         
         # Create reliable Gmail URL using search by subject
         import urllib.parse
+        import json
+        
+        # Load Gmail account index from config
+        gmail_account_index = 0  # Default
+        try:
+            with open('../config/config.json', 'r') as f:
+                config = json.load(f)
+                gmail_account_index = config.get('gmail_account_index', 0)
+        except:
+            pass  # Use default if config file not found
+        
         search_query = urllib.parse.quote(f'subject:"{subject[:50]}"')
         
         message_data = {
@@ -95,7 +106,7 @@ class GmailClient:
             'date': date,
             'attachments': [],
             'body_text': '',
-            'gmail_url': f"https://mail.google.com/mail/#search/{search_query}"
+            'gmail_url': f"https://mail.google.com/mail/u/{gmail_account_index}/#search/{search_query}"
         }
         
         # Extract email body text
